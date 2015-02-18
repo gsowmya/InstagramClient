@@ -12,3 +12,6 @@ Required: For each photo displayed, user can see details like Graphic, Caption, 
 Optional: Relative timestamp, like count, user profile image,comments count
 Optional: Display each photo with the same style and proportions as the real Instagram
 Optional: Display each user profile image using a RoundedImageView
+
+Screen shots:
+![instagramclient](https://cloud.githubusercontent.com/assets/6395284/6243051/f10b85d8-b6ee-11e4-954e-6213deaff4a4.gif)

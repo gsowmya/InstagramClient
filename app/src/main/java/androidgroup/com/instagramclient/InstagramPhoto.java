@@ -1,9 +1,15 @@
 package androidgroup.com.instagramclient;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
+import java.io.Serializable;
+import java.util.List;
+
 /**
  * Created by Sowmya on 2/16/15.
  */
-public class InstagramPhoto {
+public class InstagramPhoto implements Serializable{
 
    private String userName;
    private String profilePicture;
@@ -12,6 +18,16 @@ public class InstagramPhoto {
    private String likes;
    private String comments;
    private String caption;
+
+    public List<Comments> getCommentsList() {
+        return commentsList;
+    }
+
+    public void setCommentsList(List<Comments> commentsList) {
+        this.commentsList = commentsList;
+    }
+
+    private List<Comments> commentsList;
 
     public String getUserName() {
         return userName;
@@ -68,4 +84,5 @@ public class InstagramPhoto {
     public void setCaption(String caption) {
         this.caption = caption;
     }
+
 }

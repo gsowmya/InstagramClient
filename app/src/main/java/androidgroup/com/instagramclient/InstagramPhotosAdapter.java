@@ -1,7 +1,12 @@
 package androidgroup.com.instagramclient;
 
+import android.app.AlertDialog;
+import android.app.DialogFragment;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.Color;
+import android.os.Bundle;
 import android.text.format.DateUtils;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -28,8 +33,8 @@ public class InstagramPhotosAdapter extends ArrayAdapter<InstagramPhoto> {
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
 
-        InstagramPhoto photo = getItem(position);
-        PhotoViewHolder viewHolder;
+        final InstagramPhoto photo = getItem(position);
+        final PhotoViewHolder viewHolder;
         if(convertView == null){
             viewHolder = new PhotoViewHolder();
             convertView = LayoutInflater.from(getContext()).inflate(R.layout.item_photo,parent,false);
@@ -70,6 +75,14 @@ public class InstagramPhotosAdapter extends ArrayAdapter<InstagramPhoto> {
             viewHolder.txtCaption.setText(photo.getCaption());
             viewHolder.txtLikes.setText(photo.getLikes());
             viewHolder.txtComments.setText(photo.getComments());
+            viewHolder.txtComments.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent i = new Intent(getContext(),CommentsActivity.class);
+                    i.putExtra("comments",photo);
+                    getContext().startActivity(i);
+                }
+            });
 
         return convertView;
     }

@@ -1,5 +1,6 @@
 package androidgroup.com.instagramclient;
 
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBar;
 import android.support.v4.app.Fragment;
@@ -22,19 +23,25 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.List;
 
 
 public class MainActivity extends ActionBarActivity {
 
-    private static final String ClientId ="2d1e3ab5aacb4962aed7729e998bc2e3";
+    private static final String ClientId = "2d1e3ab5aacb4962aed7729e998bc2e3";
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
     private ArrayList<InstagramPhoto> photos;
+    private ArrayList<Comments> comments = new ArrayList<Comments>();
     private InstagramPhotosAdapter photosAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
+        getSupportActionBar().setIcon(R.drawable.logo);
+
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
                     .add(R.id.container, new PlaceholderFragment())
@@ -43,11 +50,11 @@ public class MainActivity extends ActionBarActivity {
 
     }
 
-    private void fetchPopularPhotos(){
+    private void fetchPopularPhotos() {
 
-        String url = "https://api.instagram.com/v1/media/popular?client_id="+ ClientId;
+        String url = "https://api.instagram.com/v1/media/popular?client_id=" + ClientId;
         AsyncHttpClient client = new AsyncHttpClient();
-        client.get(url,null,new JsonHttpResponseHandler(){
+        client.get(url, null, new JsonHttpResponseHandler() {
 
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
@@ -57,7 +64,7 @@ public class MainActivity extends ActionBarActivity {
 
                 try {
                     photosJSON = response.getJSONArray("data");
-                    for(int i=0;i<photosJSON.length();i++){
+                    for (int i = 0; i < photosJSON.length(); i++) {
 
                         JSONObject photoJSON = photosJSON.getJSONObject(i);
                         InstagramPhoto photo = new InstagramPhoto();
@@ -74,16 +81,33 @@ public class MainActivity extends ActionBarActivity {
                         String likesCount = photoJSON.getJSONObject("likes").getString("count");
                         photo.setLikes(likesCount + " likes");
                         String commentsCount = photoJSON.getJSONObject("comments").getString("count");
-                        photo.setComments("view all "+commentsCount + " comments");
+                        photo.setComments("view all " + commentsCount + " comments");
+                        JSONArray commentsArray = photoJSON.getJSONObject("comments").getJSONArray("data");
+                        int length = commentsArray.length();
+                        String time,text,name,profileImage;
+                        for(int ele=0;ele<length;ele++){
+                            JSONObject userCommentJSONObject = commentsArray.getJSONObject(ele);
+                            Comments comment = new Comments();
+                            time = userCommentJSONObject.getString("created_time");
+                            text = userCommentJSONObject.getString("text");
+                            name = userCommentJSONObject.getJSONObject("from").getString("username");
+                            profileImage = userCommentJSONObject.getJSONObject("from").getString("profile_picture");
+                            comment.setCommentedTime(time);
+                            comment.setComments(text);
+                            comment.setProfilePicture(profileImage);
+                            comment.setUserName(name);
+                            comments.add(comment);
+                        }
+                        photo.setCommentsList(comments);
                         photos.add(photo);
                     }
 
-                }catch (JSONException e){
+                } catch (JSONException e) {
                     e.printStackTrace();
                 }
 
                 photosAdapter.notifyDataSetChanged();
-                Log.i(LOG_TAG,response.toString());
+                Log.i(LOG_TAG, response.toString());
             }
 
             @Override
@@ -121,6 +145,8 @@ public class MainActivity extends ActionBarActivity {
      */
     public class PlaceholderFragment extends Fragment {
 
+        private SwipeRefreshLayout swipeRefreshContainer;
+
         public PlaceholderFragment() {
         }
 
@@ -130,11 +156,34 @@ public class MainActivity extends ActionBarActivity {
             View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
             photos = new ArrayList<InstagramPhoto>();
-            photosAdapter = new InstagramPhotosAdapter(getActivity(),photos);
+            swipeRefreshContainer = (SwipeRefreshLayout)rootView.findViewById(R.id.swipeContainer);
+            swipeRefreshContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+                @Override
+                public void onRefresh() {
+                    // Your code to refresh the list here.
+                    // Make sure you call swipeContainer.setRefreshing(false)
+                    // once the network request has completed successfully.
+                    fetchTimelineAsync(0);
+                }
+            });
+            // Configure the refreshing colors
+            swipeRefreshContainer.setColorSchemeResources(android.R.color.holo_blue_bright,
+                    android.R.color.holo_green_light,
+                    android.R.color.holo_orange_light,
+                    android.R.color.holo_red_light);
+
+            photosAdapter = new InstagramPhotosAdapter(getActivity(), photos);
             ListView photosList = (ListView) rootView.findViewById(R.id.lvPhotos);
             photosList.setAdapter(photosAdapter);
             fetchPopularPhotos();
             return rootView;
+        }
+
+        public void fetchTimelineAsync(int page) {
+
+            photosAdapter.clear();
+            fetchPopularPhotos();
+            swipeRefreshContainer.setRefreshing(false);
         }
     }
 }
